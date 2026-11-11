@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Imposter · 4221-Games</title>
+  <meta name="theme-color" content="#0d0d0e">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230d0d0e'/><text x='50' y='66' font-size='46' font-family='sans-serif' font-weight='700' fill='%23c8ff2e' text-anchor='middle'>42</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a class="brand" href="./">4221<span>—</span>Games</a>
+      <span class="crumb"><a href="./">Spiele</a> / Imposter</span>
+    </header>
+
+    <main class="narrow">
+      <!-- Einstellungen -->
+      <section id="setup" class="stack" style="gap:20px">
+        <div>
+          <h1 class="title">Imposter</h1>
+          <p class="sub" style="margin:0">Alle bekommen dasselbe Wort – nur der Imposter nicht. Er bekommt ein ähnliches und muss sich durchmogeln.</p>
+        </div>
+
+        <div class="panel stack">
+          <span class="label">Spieler</span>
+          <div id="players" class="stack" style="gap:8px"></div>
+          <button class="btn ghost" id="addPlayer">+ Spieler hinzufügen</button>
+        </div>
+
+        <div class="panel stack">
+          <div class="stepper">
+            <div>
+              <span class="label">Imposter</span>
+              <div style="font-size:13px;color:var(--muted)" id="impHint"></div>
+            </div>
+            <div class="row" style="gap:14px">
+              <button id="impMinus" aria-label="weniger">−</button>
+              <span class="val" id="impVal">1</span>
+              <button id="impPlus" aria-label="mehr">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel stack">
+          <span class="label">Kategorien</span>
+          <div class="chips" id="cats"></div>
+        </div>
+
+        <div class="panel stack">
+          <label class="switch">
+            <span>Imposter bekommt ein ähnliches Wort<br><small style="color:var(--muted)">Aus = Imposter weiß nur, dass er Imposter ist</small></span>
+            <input type="checkbox" id="hintToggle" checked>
+          </label>
+          <label class="switch">
+            <span>Kategorie für alle anzeigen</span>
+            <input type="checkbox" id="catToggle" checked>
+          </label>
+        </div>
+
+        <button class="btn primary block" id="start" style="padding:18px">Runde starten</button>
+
+        <details class="panel">
+          <summary class="label" style="cursor:pointer">Regeln</summary>
+          <ol style="color:var(--muted);padding-left:18px;margin:14px 0 0">
+            <li>Handy reihum weitergeben, jede:r schaut sich geheim die eigene Karte an.</li>
+            <li>Reihum sagt jede:r ein Wort, das zum eigenen Begriff passt – nicht zu offensichtlich, sonst errät der Imposter es.</li>
+            <li>Nach ein oder zwei Runden wird abgestimmt, wer der Imposter ist.</li>
+            <li><b style="color:var(--text)">Der Imposter gewinnt</b>, wenn er nicht enttarnt wird – oder wenn er das echte Wort errät und laut ausspricht.</li>
+          </ol>
+        </details>
+      </section>
+
+      <!-- Karten verteilen -->
+      <section id="deal" class="hidden">
+        <div class="pass">
+          <span class="label" id="dealStep">Spieler 1 / 4</span>
+          <div class="who" id="dealName">Name</div>
+          <button class="card" id="card" aria-label="Karte umdrehen">
+            <div class="card-inner">
+              <div class="face front">
+                <div class="big">?</div>
+                <div class="hint">Antippen zum Aufdecken.<br>Niemand sonst darf hinschauen.</div>
+              </div>
+              <div class="face back" id="cardBack">
+                <div class="role" id="cardRole">Zivilist</div>
+                <div class="word" id="cardWord">Wort</div>
+                <div class="hint" id="cardHint"></div>
+              </div>
+            </div>
+          </button>
+          <button class="btn primary block" id="next" disabled>Verdecken & weitergeben</button>
+        </div>
+      </section>
+
+      <!-- Diskussion -->
+      <section id="talk" class="hidden stack" style="gap:20px;text-align:center">
+        <span class="label">Alle Karten verteilt</span>
+        <h1 class="title" id="starter">Anna beginnt</h1>
+        <p class="sub" id="talkCat" style="margin:0"></p>
+        <div class="panel stack">
+          <div class="timer" id="timer">3:00</div>
+          <div class="row" style="justify-content:center">
+            <button class="btn" id="timerBtn">Timer starten</button>
+            <button class="btn ghost" id="timerReset">Zurücksetzen</button>
+          </div>
+        </div>
+        <button class="btn primary block" id="reveal" style="padding:18px">Auflösen</button>
+      </section>
+
+      <!-- Auflösung -->
+      <section id="result" class="hidden stack" style="gap:20px">
+        <div style="text-align:center">
+          <span class="label">Das Wort war</span>
+          <h1 class="title" id="resWord" style="margin-top:8px">Wort</h1>
+          <p class="sub" id="resImpWord" style="margin:0"></p>
+        </div>
+        <div class="reveal-list" id="resList"></div>
+        <div class="stack">
+          <span class="label" style="text-align:center">Wer hat gewonnen?</span>
+          <div class="row" style="justify-content:center">
+            <button class="btn" id="winCiv">Zivilisten</button>
+            <button class="btn" id="winImp">Imposter</button>
+          </div>
+        </div>
+        <div class="panel score">
+          <div><b id="scoreCiv">0</b><span class="label">Zivilisten</span></div>
+          <div><b id="scoreImp">0</b><span class="label">Imposter</span></div>
+        </div>
+        <button class="btn primary block" id="again" style="padding:18px">Nächste Runde</button>
+        <button class="btn ghost block" id="toSetup">Einstellungen</button>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="js/imposter.js"></script>
+</body>
+</html>

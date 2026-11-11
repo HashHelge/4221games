@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Schach · 4221-Games</title>
+  <meta name="theme-color" content="#0d0d0e">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230d0d0e'/><text x='50' y='66' font-size='46' font-family='sans-serif' font-weight='700' fill='%23c8ff2e' text-anchor='middle'>42</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a class="brand" href="./">4221<span>—</span>Games</a>
+      <span class="crumb"><a href="./">Spiele</a> / Schach</span>
+    </header>
+
+    <main>
+      <!-- Menü -->
+      <section id="menu">
+        <h1 class="title">Schach</h1>
+        <p class="sub">Wie willst du spielen?</p>
+        <div class="menu-grid">
+          <div class="panel stack">
+            <span class="label">Lokal</span>
+            <p style="margin:0;color:var(--muted)">Beide Seiten an diesem Gerät.</p>
+            <button class="btn" id="btnLocal">Lokal spielen</button>
+          </div>
+          <div class="panel stack">
+            <span class="label">Online · neu</span>
+            <p style="margin:0;color:var(--muted)">Spiel erstellen und Code teilen.</p>
+            <button class="btn primary" id="btnCreate">Spiel erstellen</button>
+          </div>
+          <div class="panel stack">
+            <span class="label">Online · beitreten</span>
+            <input type="text" id="joinCode" class="code-input" maxlength="5" placeholder="CODE" autocomplete="off">
+            <button class="btn" id="btnJoin">Beitreten</button>
+          </div>
+        </div>
+        <p class="note hidden" id="noOnline" style="margin-top:20px">Online-Modus ist noch nicht eingerichtet — trage die Supabase-Daten in <code>js/config.js</code> ein (siehe README).</p>
+      </section>
+
+      <!-- Spiel -->
+      <section id="play" class="hidden">
+        <div class="chess-layout">
+          <div id="board" class="board" aria-label="Schachbrett"></div>
+          <aside class="side">
+            <div class="status" id="status">—</div>
+            <div class="panel stack hidden" id="sharePanel">
+              <span class="label">Spielcode <span class="dot-live" id="live"></span></span>
+              <div class="share">
+                <code id="codeOut">-----</code>
+                <button class="btn ghost" id="btnCopy" style="margin-left:auto">Link kopieren</button>
+              </div>
+            </div>
+            <div class="panel">
+              <span class="label">Züge</span>
+              <div class="moves" id="moves" style="margin-top:10px"></div>
+            </div>
+            <div class="row">
+              <button class="btn" id="btnUndo">Zug zurück</button>
+              <button class="btn" id="btnFlip">Drehen</button>
+              <button class="btn danger" id="btnResign">Aufgeben</button>
+              <button class="btn primary hidden" id="btnRematch">Revanche</button>
+              <button class="btn ghost" id="btnLeave">Menü</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal hidden" id="promo">
+    <div class="panel" id="promoChoices"></div>
+  </div>
+
+  <script type="module" src="js/schach.js"></script>
+</body>
+</html>
