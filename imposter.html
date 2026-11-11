@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Imposter · 4221-Games</title>
-  <meta name="theme-color" content="#0d0d0e">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230d0d0e'/><text x='50' y='66' font-size='46' font-family='sans-serif' font-weight='700' fill='%23c8ff2e' text-anchor='middle'>42</text></svg>">
+  <meta name="theme-color" content="#008a3e">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23008a3e'/><text x='50' y='66' font-size='46' font-family='sans-serif' font-weight='700' fill='%23ffffff' text-anchor='middle'>42</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -19,11 +19,46 @@
     </header>
 
     <main class="narrow">
-      <!-- Einstellungen -->
-      <section id="setup" class="stack" style="gap:20px">
+      <!-- Raumleiste (nur online sichtbar) -->
+      <div class="room-bar hidden" id="oBar">
+        <span class="label">Raum <code id="oBarCode">-----</code></span>
+        <button class="btn ghost" id="oLeave" style="padding:8px 14px">Verlassen</button>
+      </div>
+
+      <!-- ═════════ Modusauswahl ═════════ -->
+      <section id="modeSel" data-view class="stack" style="gap:16px">
         <div>
           <h1 class="title">Imposter</h1>
           <p class="sub" style="margin:0">Alle bekommen dasselbe Wort – nur der Imposter nicht. Er bekommt ein ähnliches und muss sich durchmogeln.</p>
+        </div>
+        <button class="mode-card" id="modeOnline">
+          <span class="label">Online</span>
+          <b>Jeder am eigenen Handy</b>
+          <span>Raum erstellen, Code teilen, Rolle erscheint auf dem eigenen Gerät. Abstimmung inklusive.</span>
+        </button>
+        <button class="mode-card" id="modeLocal">
+          <span class="label">Ein Handy</span>
+          <b>Reihum weitergeben</b>
+          <span>Alle nutzen ein Gerät und schauen sich nacheinander ihre Karte an.</span>
+        </button>
+        <p class="note hidden" id="oNoOnline">Der Online-Modus ist noch nicht eingerichtet. Trag die Supabase-Daten in <code>js/config.js</code> ein (siehe README).</p>
+        <details class="panel">
+          <summary class="label" style="cursor:pointer">Regeln</summary>
+          <ol style="color:var(--muted);padding-left:18px;margin:14px 0 0">
+            <li>Jede:r schaut sich geheim die eigene Karte an.</li>
+            <li>Reihum sagt jede:r ein Wort, das zum eigenen Begriff passt – nicht zu offensichtlich, sonst errät der Imposter es.</li>
+            <li>Nach ein oder zwei Runden wird abgestimmt, wer der Imposter ist.</li>
+            <li><b style="color:var(--text)">Der Imposter gewinnt</b>, wenn er nicht enttarnt wird – oder wenn er das echte Wort errät und laut ausspricht.</li>
+          </ol>
+        </details>
+      </section>
+
+      <!-- ═════════ LOKAL: Einstellungen ═════════ -->
+      <section id="setup" data-view class="hidden stack" style="gap:20px">
+        <div>
+          <button class="btn ghost" id="setupBack" style="padding:8px 14px;margin-bottom:16px">← Zurück</button>
+          <h1 class="title">Ein Handy</h1>
+          <p class="sub" style="margin:0">Namen eintragen, einstellen, Handy reihum geben.</p>
         </div>
 
         <div class="panel stack">
@@ -63,20 +98,10 @@
         </div>
 
         <button class="btn primary block" id="start" style="padding:18px">Runde starten</button>
-
-        <details class="panel">
-          <summary class="label" style="cursor:pointer">Regeln</summary>
-          <ol style="color:var(--muted);padding-left:18px;margin:14px 0 0">
-            <li>Handy reihum weitergeben, jede:r schaut sich geheim die eigene Karte an.</li>
-            <li>Reihum sagt jede:r ein Wort, das zum eigenen Begriff passt – nicht zu offensichtlich, sonst errät der Imposter es.</li>
-            <li>Nach ein oder zwei Runden wird abgestimmt, wer der Imposter ist.</li>
-            <li><b style="color:var(--text)">Der Imposter gewinnt</b>, wenn er nicht enttarnt wird – oder wenn er das echte Wort errät und laut ausspricht.</li>
-          </ol>
-        </details>
       </section>
 
-      <!-- Karten verteilen -->
-      <section id="deal" class="hidden">
+      <!-- LOKAL: Karten verteilen -->
+      <section id="deal" data-view class="hidden">
         <div class="pass">
           <span class="label" id="dealStep">Spieler 1 / 4</span>
           <div class="who" id="dealName">Name</div>
@@ -97,8 +122,8 @@
         </div>
       </section>
 
-      <!-- Diskussion -->
-      <section id="talk" class="hidden stack" style="gap:20px;text-align:center">
+      <!-- LOKAL: Diskussion -->
+      <section id="talk" data-view class="hidden stack" style="gap:20px;text-align:center">
         <span class="label">Alle Karten verteilt</span>
         <h1 class="title" id="starter">Anna beginnt</h1>
         <p class="sub" id="talkCat" style="margin:0"></p>
@@ -112,8 +137,8 @@
         <button class="btn primary block" id="reveal" style="padding:18px">Auflösen</button>
       </section>
 
-      <!-- Auflösung -->
-      <section id="result" class="hidden stack" style="gap:20px">
+      <!-- LOKAL: Auflösung -->
+      <section id="result" data-view class="hidden stack" style="gap:20px">
         <div style="text-align:center">
           <span class="label">Das Wort war</span>
           <h1 class="title" id="resWord" style="margin-top:8px">Wort</h1>
@@ -134,9 +159,139 @@
         <button class="btn primary block" id="again" style="padding:18px">Nächste Runde</button>
         <button class="btn ghost block" id="toSetup">Einstellungen</button>
       </section>
+
+      <!-- ═════════ ONLINE: Start ═════════ -->
+      <section id="onStart" data-view class="hidden stack" style="gap:20px">
+        <div>
+          <button class="btn ghost" id="oBack" style="padding:8px 14px;margin-bottom:16px">← Zurück</button>
+          <h1 class="title">Online</h1>
+          <p class="sub" style="margin:0">Jede:r spielt am eigenen Handy. Ihr sitzt trotzdem zusammen und redet laut.</p>
+        </div>
+        <div class="panel stack">
+          <label class="label" for="oName">Dein Name</label>
+          <input type="text" id="oName" maxlength="20" placeholder="z. B. Anna" autocomplete="nickname">
+        </div>
+        <button class="btn primary block" id="oCreate" style="padding:18px">Neuen Raum erstellen</button>
+        <div class="divider">oder beitreten</div>
+        <div class="panel stack">
+          <label class="label" for="oCode">Raum-Code</label>
+          <input type="text" id="oCode" class="code-input" maxlength="5" placeholder="CODE" autocomplete="off">
+          <button class="btn" id="oJoin">Beitreten</button>
+        </div>
+      </section>
+
+      <!-- ONLINE: Lobby -->
+      <section id="onLobby" data-view class="hidden stack" style="gap:20px">
+        <div class="panel stack" style="text-align:center">
+          <span class="label">Code zum Beitreten</span>
+          <div class="big-code" id="lCode">-----</div>
+          <button class="btn ghost" id="lCopy">Einladungslink kopieren</button>
+        </div>
+
+        <div class="stack" style="gap:10px">
+          <span class="label" id="lCount">0 Spieler</span>
+          <div class="reveal-list" id="lPlayers"></div>
+        </div>
+
+        <div id="lSettings" class="stack hidden" style="gap:12px">
+          <div class="panel stack">
+            <div class="stepper">
+              <div>
+                <span class="label">Imposter</span>
+                <div style="font-size:13px;color:var(--muted)" id="lImpHint"></div>
+              </div>
+              <div class="row" style="gap:14px">
+                <button id="lImpMinus" aria-label="weniger">−</button>
+                <span class="val" id="lImpVal">1</span>
+                <button id="lImpPlus" aria-label="mehr">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="panel stack">
+            <span class="label">Kategorien</span>
+            <div class="chips" id="lCats"></div>
+          </div>
+          <div class="panel stack">
+            <label class="switch">
+              <span>Imposter bekommt ein ähnliches Wort</span>
+              <input type="checkbox" id="lHint" checked>
+            </label>
+            <label class="switch">
+              <span>Kategorie für alle anzeigen</span>
+              <input type="checkbox" id="lShowCat" checked>
+            </label>
+          </div>
+          <button class="btn primary block" id="lStart" style="padding:18px">Runde starten</button>
+        </div>
+
+        <div id="lWait" class="panel stack hidden" style="text-align:center">
+          <span class="label">Warte auf den Host</span>
+          <p style="margin:0;color:var(--muted)" id="lSummary"></p>
+        </div>
+      </section>
+
+      <!-- ONLINE: Rolle -->
+      <section id="onPlay" data-view class="hidden">
+        <div class="pass">
+          <span class="label" id="pRound">Runde 1</span>
+          <div class="who" id="pStarter" style="font-size:clamp(30px,8vw,44px);margin-bottom:6px">Anna beginnt</div>
+          <p class="sub" id="pCat" style="margin:0 0 20px"></p>
+          <button class="card" id="oCard" aria-label="Karte umdrehen">
+            <div class="card-inner">
+              <div class="face front">
+                <div class="big">?</div>
+                <div class="hint">Antippen zum Aufdecken.<br>Nochmal tippen zum Verdecken.</div>
+              </div>
+              <div class="face back" id="oCardBack">
+                <div class="role" id="oCardRole">Zivilist</div>
+                <div class="word" id="oCardWord">Wort</div>
+                <div class="hint" id="oCardHint"></div>
+              </div>
+            </div>
+          </button>
+          <div class="panel hidden" id="pLate" style="margin-bottom:20px">Du bist mitten in der Runde dazugekommen und spielst ab der nächsten Runde mit.</div>
+          <div class="stack" id="pHost">
+            <button class="btn primary block" id="pVote" style="padding:18px">Abstimmung starten</button>
+            <button class="btn ghost block" id="pAbort">Runde abbrechen</button>
+          </div>
+          <p class="sub" id="pWait" style="margin:0">Redet reihum. Der Host startet die Abstimmung.</p>
+        </div>
+      </section>
+
+      <!-- ONLINE: Abstimmung -->
+      <section id="onVote" data-view class="hidden stack" style="gap:20px">
+        <div style="text-align:center">
+          <span class="label" id="vCount">0 / 0 abgestimmt</span>
+          <h1 class="title" style="margin-top:8px">Wer ist der Imposter?</h1>
+          <p class="sub" style="margin:0" id="vSub">Tippe auf eine Person. Du kannst deine Stimme ändern, bis aufgelöst wird.</p>
+        </div>
+        <div class="vote-grid" id="vList"></div>
+        <button class="btn primary block hidden" id="vResolve" style="padding:18px">Jetzt auflösen</button>
+      </section>
+
+      <!-- ONLINE: Ergebnis -->
+      <section id="onResult" data-view class="hidden stack" style="gap:20px">
+        <div style="text-align:center">
+          <span class="label" id="rReason">—</span>
+          <h1 class="title" id="rWinner" style="margin-top:8px">—</h1>
+          <p class="sub" style="margin:0">Das Wort war <b id="rWord" style="color:var(--text)">—</b><span id="rImpWord"></span></p>
+        </div>
+        <div class="reveal-list" id="rList"></div>
+        <div class="panel score">
+          <div><b id="rScoreCiv">0</b><span class="label">Zivilisten</span></div>
+          <div><b id="rScoreImp">0</b><span class="label">Imposter</span></div>
+        </div>
+        <div class="stack" id="rHost">
+          <button class="btn primary block" id="rNext" style="padding:18px">Nächste Runde</button>
+          <button class="btn block" id="rGuessed">Imposter hat das Wort erraten</button>
+          <button class="btn ghost block" id="rLobby">Zur Lobby (Einstellungen)</button>
+        </div>
+        <p class="sub hidden" id="rWait" style="margin:0;text-align:center">Warte auf den Host…</p>
+      </section>
     </main>
   </div>
 
   <script type="module" src="js/imposter.js"></script>
+  <script type="module" src="js/imposter-online.js"></script>
 </body>
 </html>
