@@ -30,7 +30,7 @@ Ohne Supabase funktionieren schon: Imposter mit einem Handy und lokales Schach.
    export const SUPABASE_URL = "https://xxxx.supabase.co";
    export const SUPABASE_KEY = "dein-key";
    ```
-6. Nach 1–2 Minuten die Seite neu laden. Fertig.
+6. Nach 1–2 Minuten `https://<dein-name>.github.io/4221-games/test.html` öffnen. Die Seite prüft alles und sagt bei einem Fehler genau, was zu tun ist.
 
 Hinweise:
 - Der anon/publishable Key darf öffentlich sein. In der Datenbank liegen nur Spieldaten.
@@ -63,6 +63,7 @@ js/imposter.js           Imposter, ein Handy
 js/imposter-online.js    Imposter, online
 js/woerter.js            Wortpaare
 supabase/schema.sql      Datenbank-Setup
+test.html                Verbindungstest für Supabase
 ```
 
 ## Wörter erweitern

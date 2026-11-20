@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verbindungstest · 4221-Games</title>
+  <meta name="theme-color" content="#008a3e">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .check { display: grid; grid-template-columns: 28px 1fr; gap: 4px 12px; padding: 16px 18px; background: var(--surface); }
+    .check .ico { font-family: var(--mono); font-weight: 700; font-size: 18px; line-height: 1.4; }
+    .check b { font-weight: 600; }
+    .check p { grid-column: 2; margin: 0; color: var(--muted); font-size: 14px; }
+    .check code, .fix code { font-family: var(--mono); font-size: 13px; background: var(--surface-2); padding: 1px 6px; border-radius: 6px; word-break: break-all; }
+    .ok .ico { color: var(--accent); }
+    .bad .ico { color: var(--danger); }
+    .wait .ico { color: var(--muted); }
+    .fix { grid-column: 2; margin-top: 6px; font-size: 14px; border-left: 2px solid var(--danger); padding-left: 10px; }
+    .list { display: flex; flex-direction: column; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a class="brand" href="./">4221<span>—</span>Games</a>
+      <span class="crumb"><a href="./">Spiele</a> / Verbindungstest</span>
+    </header>
+    <main class="narrow stack" style="gap:20px">
+      <div>
+        <h1 class="title">Verbindungstest</h1>
+        <p class="sub" style="margin:0">Prüft Schritt für Schritt, ob die Online-Funktionen mit Supabase sprechen können.</p>
+      </div>
+      <div class="list" id="list"></div>
+      <button class="btn primary block" id="again">Erneut testen</button>
+      <p class="note" id="summary"></p>
+    </main>
+  </div>
+
+  <script type="module">
+    const list = document.getElementById("list");
+    const items = [];
+
+    function add(title) {
+      const el = document.createElement("div");
+      el.className = "check wait";
+      el.innerHTML = `<span class="ico">…</span><b></b><p></p>`;
+      el.querySelector("b").textContent = title;
+      list.appendChild(el);
+      const item = {
+        ok(msg = "") { el.className = "check ok"; el.querySelector(".ico").textContent = "✓"; el.querySelector("p").textContent = msg; item.state = "ok"; },
+        bad(msg, fix) {
+          el.className = "check bad"; el.querySelector(".ico").textContent = "✕";
+          el.querySelector("p").textContent = msg;
+          if (fix) { const f = document.createElement("div"); f.className = "fix"; f.innerHTML = fix; el.appendChild(f); }
+          item.state = "bad";
+        },
+        state: "wait"
+      };
+      items.push(item);
+      return item;
+    }
+
+    const RUN_SQL = "Öffne in Supabase <b>SQL Editor → New query</b>, füge die komplette neue <code>supabase/schema.sql</code> ein und klicke <b>Run</b>.";
+
+    async function run() {
+      list.innerHTML = ""; items.length = 0;
+      document.getElementById("summary").textContent = "";
+
+      // 1 · config.js
+      const c1 = add("Zugangsdaten in js/config.js");
+      let cfg;
+      try {
+        cfg = await import("./js/config.js?v=" + Date.now());
+      } catch (e) {
+        c1.bad("Die Datei js/config.js wurde nicht gefunden.", "Prüfe auf GitHub, dass es einen Ordner <code>js</code> mit der Datei <code>config.js</code> gibt – direkt im Hauptverzeichnis des Repos, nicht in einem Unterordner <code>4221-games</code>.");
+        return finish();
+      }
+      const url = (cfg.SUPABASE_URL || "").trim();
+      const key = (cfg.SUPABASE_KEY || "").trim();
+      if (!url || !key) {
+        c1.bad("URL oder Key ist leer.", "Trage beide Werte in <code>js/config.js</code> ein und lade die Datei erneut hoch.");
+        return finish();
+      }
+      if (/\/rest\/v1/.test(url) || url.endsWith("/")) {
+        c1.bad("Die URL hat einen falschen Anhang: " + url, "Die URL muss genau so aussehen: <code>https://xxxx.supabase.co</code> – ohne <code>/rest/v1/</code> und ohne Schrägstrich am Ende.");
+        return finish();
+      }
+      if (!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(url)) {
+        c1.bad("Die URL sieht ungewöhnlich aus: " + url, "Erwartet wird <code>https://xxxx.supabase.co</code>.");
+        return finish();
+      }
+      if (/^sb_secret_/.test(key) || /service_role/.test(key)) {
+        c1.bad("Das ist der geheime Key!", "Nimm stattdessen den <b>publishable</b>- oder <b>anon</b>-Key. Den geheimen Key in Supabase am besten neu erzeugen, da er jetzt öffentlich war.");
+        return finish();
+      }
+      c1.ok(url.replace("https://", "") + " · Key " + key.slice(0, 18) + "…");
+
+      // 2 · Bibliothek
+      const c2 = add("Supabase-Bibliothek laden");
+      let createClient;
+      try {
+        ({ createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"));
+        c2.ok("Geladen von cdn.jsdelivr.net");
+      } catch (e) {
+        c2.bad("Konnte nicht geladen werden: " + e.message, "Das Firmennetz blockiert evtl. <code>cdn.jsdelivr.net</code>. Teste mit dem Handy im Mobilfunknetz (WLAN aus).");
+        return finish();
+      }
+      const sb = createClient(url, key);
+
+      // 3 · Projekt erreichbar + Tabellen
+      for (const t of ["chess_games", "imposter_rooms", "imposter_players"]) {
+        const c = add("Tabelle " + t + " lesen");
+        const { error } = await sb.from(t).select("*", { count: "exact", head: true });
+        if (!error) { c.ok("Zugriff klappt"); continue; }
+        const m = (error.message || "") + " " + (error.code || "");
+        if (/Failed to fetch|NetworkError|Load failed/i.test(m)) {
+          c.bad("Supabase ist nicht erreichbar.", "Ist das Projekt pausiert? In Supabase im Dashboard ggf. <b>Restore project</b> klicken. Sonst blockiert evtl. das Firmennetz <code>supabase.co</code> – teste mit dem Handy im Mobilfunknetz.");
+        } else if (/Invalid API key|JWT|apikey|401/i.test(m)) {
+          c.bad("Der Key wird abgelehnt: " + error.message, "Kopiere in Supabase unter <b>Project Settings → API Keys</b> den <b>publishable</b>-Key erneut in <code>js/config.js</code>.");
+        } else if (/does not exist|schema cache|PGRST205|42P01/i.test(m)) {
+          c.bad("Die Tabelle gibt es nicht: " + error.message, RUN_SQL);
+        } else if (/permission denied|42501/i.test(m)) {
+          c.bad("Keine Berechtigung: " + error.message, RUN_SQL + " Die neue Version enthält die fehlenden Freigaben (<code>grant …</code>).");
+        } else {
+          c.bad(error.message || m, RUN_SQL);
+        }
+        return finish();
+      }
+
+      // 4 · Schreiben
+      const c4 = add("Testraum anlegen und wieder löschen");
+      const id = "T" + Math.random().toString(36).slice(2, 6).toUpperCase();
+      const ins = await sb.from("imposter_rooms").insert({ id, host: "verbindungstest", settings: {} });
+      if (ins.error) {
+        c4.bad("Schreiben fehlgeschlagen: " + ins.error.message, RUN_SQL);
+        return finish();
+      }
+      const upd = await sb.from("imposter_rooms").update({ phase: "lobby" }).eq("id", id);
+      const del = await sb.from("imposter_rooms").delete().eq("id", id);
+      if (upd.error || del.error) {
+        c4.bad("Ändern/Löschen fehlgeschlagen: " + (upd.error || del.error).message, RUN_SQL);
+        return finish();
+      }
+      c4.ok("Anlegen, Ändern und Löschen klappt");
+
+      // 5 · Realtime
+      const c5 = add("Live-Updates (Realtime)");
+      const rid = "R" + Math.random().toString(36).slice(2, 6).toUpperCase();
+      const got = await new Promise((resolve) => {
+        let done = false;
+        const finishRt = (v) => { if (!done) { done = true; resolve(v); } };
+        const ch = sb.channel("test-" + rid)
+          .on("postgres_changes", { event: "INSERT", schema: "public", table: "imposter_rooms", filter: "id=eq." + rid }, () => {
+            finishRt("event"); sb.removeChannel(ch);
+          })
+          .subscribe(async (status) => {
+            if (status === "SUBSCRIBED") {
+              await sb.from("imposter_rooms").insert({ id: rid, host: "verbindungstest", settings: {} });
+            } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              finishRt(status); sb.removeChannel(ch);
+            }
+          });
+        setTimeout(() => { finishRt("timeout"); sb.removeChannel(ch); }, 8000);
+      });
+      await sb.from("imposter_rooms").delete().eq("id", rid);
+      if (got === "event") c5.ok("Änderungen kommen sofort an");
+      else c5.bad(
+        got === "timeout" ? "Keine Live-Meldung erhalten (Spiele laufen trotzdem, aktualisieren sich aber nur alle 3–4 Sekunden)." : "Realtime-Fehler: " + got,
+        "Prüfe in Supabase unter <b>Database → Publications → supabase_realtime</b>, dass die drei Tabellen eingeschaltet sind – oder führe die <code>schema.sql</code> erneut aus."
+      );
+
+      finish();
+    }
+
+    function finish() {
+      const bad = items.some((i) => i.state === "bad");
+      const s = document.getElementById("summary");
+      s.textContent = bad
+        ? "Bei dem roten Punkt hängt es. Behebe ihn und tippe auf „Erneut testen“."
+        : "Alles bereit. Online-Schach und Online-Imposter sollten funktionieren.";
+    }
+
+    document.getElementById("again").onclick = run;
+    run();
+  </script>
+</body>
+</html>
