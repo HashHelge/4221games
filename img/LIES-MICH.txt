@@ -1,0 +1,3 @@
+Hier das LVM-Logo als  lvm-logo.png  ablegen (genau dieser Dateiname).
+Am besten eine PNG mit transparentem Hintergrund, z. B. die weiße Logo-Variante –
+die wirkt auf dem grünen Feld am besten. Fehlt die Datei, bleibt das Feld einfach leer.

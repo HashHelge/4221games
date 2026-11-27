@@ -3,12 +3,18 @@
 Kleine Spieleseite für die Abteilung. Reines HTML/CSS/JS ohne Build-Schritt, läuft direkt auf GitHub Pages.
 
 **Spiele**
-- **Schach**: lokal an einem Gerät oder online zu zweit per 5-stelligem Code oder Link.
+- **Schach** (angelehnt an bekannte Online-Schachseiten):
+  - lokal an einem Gerät oder online zu zweit per 5-stelligem Code oder Link
+  - Zeitkontrollen (Bullet, Blitz, Schnellschach) oder **Arbeitsmodus** ohne Uhr
+  - Figuren ziehen oder anklicken, mögliche Züge werden angezeigt
+  - Premoves (online), Materialanzeige, Züge mit ← → nachspielen
+  - Chat mit Emotes (online)
+  - LVM-Logo auf dem grünen Eckfeld (Datei `img/lvm-logo.png`)
 - **Imposter**:
   - *Online*: Jede:r spielt am eigenen Handy. Raum erstellen, Code teilen, Rolle erscheint auf dem eigenen Gerät, Abstimmung im Spiel.
   - *Ein Handy*: Pass-and-Play, das Gerät geht reihum.
 
-Die Online-Funktionen laufen über Supabase (kostenlos).
+Die Online-Funktionen laufen über Supabase (kostenlos). Hell- und Dunkelmodus lassen sich oben rechts auf jeder Seite umschalten.
 
 ## 1 · Auf GitHub online stellen
 
@@ -56,6 +62,9 @@ index.html               Startseite
 schach.html              Schach
 imposter.html            Imposter (beide Modi)
 css/style.css            Design (Farben oben unter :root)
+css/schach.css           Design des Schachbretts (Brettfarben oben)
+js/theme.js              Hell/Dunkel-Umschalter
+img/lvm-logo.png         LVM-Logo fürs Schachbrett (selbst ablegen)
 js/config.js             Supabase-Zugangsdaten
 js/common.js             Hilfsfunktionen
 js/schach.js             Schach
@@ -69,3 +78,7 @@ test.html                Verbindungstest für Supabase
 ## Wörter erweitern
 
 In `js/woerter.js` Paare ergänzen: `["Wort A", "ähnliches Wort B"]`. Welches davon das „echte“ ist, wird pro Runde zufällig entschieden.
+
+## Figuren
+
+Die Schachfiguren sind der freie Standardsatz „cburnett“ von Colin M.L. Burnett (CC BY-SA 3.0), wie auf Wikipedia und Lichess. Sie werden beim Öffnen von cdn.jsdelivr.net geladen. Klappt das nicht (z. B. Firmen-Firewall), erscheinen einfache Ersatzfiguren.

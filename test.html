@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/theme.js"></script>
   <style>
     .check { display: grid; grid-template-columns: 28px 1fr; gap: 4px 12px; padding: 16px 18px; background: var(--surface); }
     .check .ico { font-family: var(--mono); font-weight: 700; font-size: 18px; line-height: 1.4; }
@@ -26,7 +27,7 @@
   <div class="wrap">
     <header class="top">
       <a class="brand" href="./">4221<span>—</span>Games</a>
-      <span class="crumb"><a href="./">Spiele</a> / Verbindungstest</span>
+      <div class="top-right"><span class="crumb"><a href="./">Spiele</a> / Verbindungstest</span><button class="theme-btn" data-theme-toggle type="button" aria-label="Farbmodus wechseln"></button></div>
     </header>
     <main class="narrow stack" style="gap:20px">
       <div>
@@ -111,7 +112,7 @@
       const sb = createClient(url, key);
 
       // 3 · Projekt erreichbar + Tabellen
-      for (const t of ["chess_games", "imposter_rooms", "imposter_players"]) {
+      for (const t of ["chess_games", "chess_chat", "imposter_rooms", "imposter_players"]) {
         const c = add("Tabelle " + t + " lesen");
         const { error } = await sb.from(t).select("*", { count: "exact", head: true });
         if (!error) { c.ok("Zugriff klappt"); continue; }
@@ -129,6 +130,12 @@
         }
         return finish();
       }
+
+      // 3b · Neue Spalten für Uhr/Chat vorhanden?
+      const c3 = add("Schach-Erweiterung (Uhr, Namen)");
+      const cols = await sb.from("chess_games").select("tc_base,white_name,white_ms,last_move_at", { head: true });
+      if (cols.error) { c3.bad("Spalten fehlen: " + cols.error.message, RUN_SQL); return finish(); }
+      c3.ok("Spalten vorhanden");
 
       // 4 · Schreiben
       const c4 = add("Testraum anlegen und wieder löschen");

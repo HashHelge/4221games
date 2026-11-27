@@ -10,19 +10,31 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/schach.css">
+  <!-- Figuren: Standardsatz "cburnett" (Colin M.L. Burnett, CC BY-SA 3.0) aus dem Paket chessground -->
+  <link rel="stylesheet" id="pieceCss" href="https://cdn.jsdelivr.net/npm/chessground@9/assets/chessground.cburnett.css">
+  <script src="js/theme.js"></script>
 </head>
-<body>
-  <div class="wrap">
-    <header class="top">
+<body class="cg-wrap">
+  <div class="wrap wide">
+    <header class="top slim">
       <a class="brand" href="./">4221<span>—</span>Games</a>
-      <span class="crumb"><a href="./">Spiele</a> / Schach</span>
+      <div class="top-right"><span class="crumb"><a href="./">Spiele</a> / Schach</span><button class="theme-btn" data-theme-toggle type="button" aria-label="Farbmodus wechseln"></button></div>
     </header>
 
-    <main>
-      <!-- Menü -->
-      <section id="menu">
-        <h1 class="title">Schach</h1>
-        <p class="sub">Wie willst du spielen?</p>
+    <main class="chess-main">
+      <!-- ═════════ Menü ═════════ -->
+      <section id="menu" class="stack" style="gap:20px;max-width:760px;margin:0 auto">
+        <div>
+          <h1 class="title">Schach</h1>
+          <p class="sub" style="margin:0">Zeit wählen, dann lokal spielen oder online jemanden einladen.</p>
+        </div>
+
+        <div class="panel stack">
+          <span class="label">Bedenkzeit</span>
+          <div id="tcList"></div>
+        </div>
+
         <div class="menu-grid">
           <div class="panel stack">
             <span class="label">Lokal</span>
@@ -30,45 +42,81 @@
             <button class="btn" id="btnLocal">Lokal spielen</button>
           </div>
           <div class="panel stack">
-            <span class="label">Online · neu</span>
-            <p style="margin:0;color:var(--muted)">Spiel erstellen und Code teilen.</p>
+            <span class="label">Online</span>
+            <label class="label" for="myName" style="text-transform:none;letter-spacing:0;font-size:13px">Dein Name</label>
+            <input type="text" id="myName" maxlength="20" placeholder="z. B. Anna" autocomplete="nickname">
             <button class="btn primary" id="btnCreate">Spiel erstellen</button>
           </div>
           <div class="panel stack">
-            <span class="label">Online · beitreten</span>
+            <span class="label">Beitreten</span>
             <input type="text" id="joinCode" class="code-input" maxlength="5" placeholder="CODE" autocomplete="off">
             <button class="btn" id="btnJoin">Beitreten</button>
           </div>
         </div>
-        <p class="note hidden" id="noOnline" style="margin-top:20px">Online-Modus ist noch nicht eingerichtet — trage die Supabase-Daten in <code>js/config.js</code> ein (siehe README).</p>
+        <p class="note hidden" id="noOnline">Online-Modus ist noch nicht eingerichtet. Trag die Supabase-Daten in <code>js/config.js</code> ein (siehe README).</p>
       </section>
 
-      <!-- Spiel -->
+      <!-- ═════════ Spiel ═════════ -->
       <section id="play" class="hidden">
-        <div class="chess-layout">
-          <div id="board" class="board" aria-label="Schachbrett"></div>
-          <aside class="side">
-            <div class="status" id="status">—</div>
-            <div class="panel stack hidden" id="sharePanel">
-              <span class="label">Spielcode <span class="dot-live" id="live"></span></span>
-              <div class="share">
-                <code id="codeOut">-----</code>
-                <button class="btn ghost" id="btnCopy" style="margin-left:auto">Link kopieren</button>
+        <div class="game">
+          <div class="board-col">
+            <div class="pbar" id="barTop"></div>
+            <div class="board-wrap">
+              <div id="board" class="board" aria-label="Schachbrett"></div>
+              <div class="result-card hidden" id="resultCard">
+                <div class="rc-head">
+                  <button class="rc-x" id="rcClose" aria-label="Schließen">×</button>
+                  <b id="rcTitle">—</b>
+                  <span id="rcReason">—</span>
+                </div>
+                <div class="rc-body">
+                  <button class="btn primary" id="rcRematch">Revanche</button>
+                  <button class="btn ghost" id="rcMenu">Neues Spiel</button>
+                </div>
               </div>
             </div>
-            <div class="panel">
-              <span class="label">Züge</span>
-              <div class="moves" id="moves" style="margin-top:10px"></div>
+            <div class="pbar" id="barBottom"></div>
+          </div>
+
+          <aside class="side">
+            <div class="box status" id="status">—</div>
+
+            <div class="box share hidden" id="sharePanel">
+              <span class="dot-live" id="live" title="Live-Verbindung"></span>
+              <code id="codeOut">-----</code>
+              <button class="btn ghost" id="btnCopy">Link kopieren</button>
             </div>
-            <div class="row">
-              <button class="btn" id="btnUndo">Zug zurück</button>
-              <button class="btn" id="btnFlip">Drehen</button>
+
+            <div class="box moves-card">
+              <div class="moves" id="moves"></div>
+              <div class="nav">
+                <button id="navFirst" title="Zum Anfang (↑)" aria-label="Zum Anfang">⏮</button>
+                <button id="navPrev" title="Zug zurück (←)" aria-label="Einen Zug zurück">◀</button>
+                <button id="navNext" title="Zug vor (→)" aria-label="Einen Zug vor">▶</button>
+                <button id="navLast" title="Zum aktuellen Zug (↓)" aria-label="Zum aktuellen Zug">⏭</button>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn" id="btnFlip">Brett drehen</button>
+              <button class="btn" id="btnUndo">Zug zurücknehmen</button>
               <button class="btn danger" id="btnResign">Aufgeben</button>
               <button class="btn primary hidden" id="btnRematch">Revanche</button>
               <button class="btn ghost" id="btnLeave">Menü</button>
             </div>
+
+            <div class="box chat hidden" id="chat">
+              <div class="chat-log" id="chatLog"></div>
+              <div class="emotes" id="emotes"></div>
+              <form class="chat-form" id="chatForm">
+                <input type="text" id="chatInput" maxlength="300" placeholder="Nachricht…" autocomplete="off">
+                <button class="btn primary" type="submit">Senden</button>
+              </form>
+            </div>
+            <p class="keys-hint">Pfeiltasten ← → blättern durch die Züge · Rechtsklick bricht einen Premove ab</p>
           </aside>
         </div>
+        <p class="credit">Figuren: „cburnett“ von Colin M.L. Burnett, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a></p>
       </section>
     </main>
   </div>

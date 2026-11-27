@@ -1,4 +1,4 @@
--- 4221-Games · Supabase-Setup (Online-Schach + Online-Imposter)
+-- 4221-Games · Supabase-Setup (Online-Schach mit Uhr + Chat, Online-Imposter)
 -- In Supabase: SQL Editor → New query → alles einfügen → Run
 -- Das Skript kann gefahrlos mehrfach ausgeführt werden. Es löscht keine Spieldaten.
 
@@ -15,6 +15,37 @@ create table if not exists public.chess_games (
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
+
+-- Erweiterungen für Uhr, Namen und Chat (für bestehende Datenbanken)
+alter table public.chess_games add column if not exists white_name   text;
+alter table public.chess_games add column if not exists black_name   text;
+alter table public.chess_games add column if not exists tc_base      integer;   -- Sekunden, leer = Arbeitsmodus
+alter table public.chess_games add column if not exists tc_inc       integer not null default 0;
+alter table public.chess_games add column if not exists white_ms     integer;   -- Restzeit Weiß beim letzten Zug
+alter table public.chess_games add column if not exists black_ms     integer;
+alter table public.chess_games add column if not exists last_move_at timestamptz not null default now();
+
+-- Zeitpunkt des letzten Zuges setzt der Server (verhindert Uhren-Tricks und Zeitzonen-Probleme)
+create or replace function public.chess_touch() returns trigger language plpgsql as $$
+begin
+  if new.pgn is distinct from old.pgn then
+    new.last_move_at := now();
+  end if;
+  return new;
+end $$;
+drop trigger if exists chess_touch on public.chess_games;
+create trigger chess_touch before update on public.chess_games
+  for each row execute function public.chess_touch();
+
+create table if not exists public.chess_chat (
+  id          uuid primary key default gen_random_uuid(),
+  game_id     text not null references public.chess_games(id) on delete cascade,
+  sender      text not null,
+  name        text,
+  body        text not null check (char_length(body) between 1 and 300),
+  created_at  timestamptz not null default now()
+);
+create index if not exists chess_chat_game on public.chess_chat (game_id, created_at);
 
 -- ───────── Imposter ─────────
 create table if not exists public.imposter_rooms (
@@ -42,17 +73,19 @@ create table if not exists public.imposter_players (
 -- Diese Zeilen erlauben der Website den Zugriff.
 grant usage on schema public to anon, authenticated;
 grant select, insert, update, delete on public.chess_games      to anon, authenticated;
+grant select, insert, update, delete on public.chess_chat       to anon, authenticated;
 grant select, insert, update, delete on public.imposter_rooms   to anon, authenticated;
 grant select, insert, update, delete on public.imposter_players to anon, authenticated;
 
 alter table public.chess_games      enable row level security;
+alter table public.chess_chat       enable row level security;
 alter table public.imposter_rooms   enable row level security;
 alter table public.imposter_players enable row level security;
 
 do $$
 declare t text;
 begin
-  foreach t in array array['chess_games', 'imposter_rooms', 'imposter_players'] loop
+  foreach t in array array['chess_games', 'chess_chat', 'imposter_rooms', 'imposter_players'] loop
     execute format('drop policy if exists "open read"   on public.%I', t);
     execute format('drop policy if exists "open insert" on public.%I', t);
     execute format('drop policy if exists "open update" on public.%I', t);
